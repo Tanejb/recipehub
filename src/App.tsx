@@ -2,6 +2,7 @@ import { Route, Routes } from 'react-router-dom'
 import Layout from './components/Layout'
 import HomePage from './pages/HomePage'
 import NotFoundPage from './pages/NotFoundPage'
+import PhotoCreditsPage from './pages/PhotoCreditsPage'
 import PlaceholderPage from './pages/PlaceholderPage'
 
 export default function App() {
@@ -37,6 +38,7 @@ export default function App() {
           path="dodaj-recept"
           element={<PlaceholderPage title="Dodaj recept" intro="Deli svoj recept z drugimi." />}
         />
+        <Route path="viri-fotografij" element={<PhotoCreditsPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Route>
     </Routes>

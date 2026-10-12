@@ -801,3 +801,43 @@ textarea {
     display: none;
   }
 }
+
+/* --- Tabela virov ------------------------------------------------------- */
+
+.credits-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.credits-table th,
+.credits-table td {
+  text-align: left;
+  padding: 0.6rem 0.75rem 0.6rem 0;
+  border-bottom: 1px solid var(--rule);
+  vertical-align: top;
+}
+
+.credits-table th {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  border-bottom: 2px solid var(--ink);
+}
+
+@media (max-width: 700px) {
+  .credits-table thead {
+    display: none;
+  }
+
+  .credits-table tr {
+    display: grid;
+    padding-block: 0.6rem;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .credits-table td {
+    border: 0;
+    padding: 0.1rem 0;
+  }
+}

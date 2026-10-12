@@ -1,48 +1,49 @@
-// Za vsak recept poišče fotografijo na Pexels, jo pretvori v WebP (800×600) in shrani v
-// public/images/recipes/<slug>.webp. Avtorje zapiše v scripts/image-credits.json.
+// Za vsak recept poišče fotografijo na Openverse (odprte licence CC0 / CC BY, večinoma Flickr),
+// jo pretvori v WebP (800×600) in shrani v public/images/recipes/<slug>.webp.
+// Avtorje in licence zapiše v src/data/image-credits.json (prikazani so v aplikaciji).
 //
 // Uporaba:  npm run images            (prenese samo manjkajoče)
 //           npm run images -- --force (prenese vse znova)
-//           npm run images -- golaz   (samo izbrani recept; uporabno, če je slika neustrezna)
+//           npm run images -- golaz   (izbrani recept zamenja z naslednjim zadetkom)
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import sharp from 'sharp'
 import { recipes } from './seed-data.mjs'
 
-// Angleški iskalni nizi dajo na Pexels bistveno boljše zadetke.
+// Angleški iskalni nizi dajo bistveno boljše zadetke.
 const QUERIES = {
   'palacinke-z-marelicno-marmelado': 'crepes with jam',
   'ovseni-kosmici-z-jabolki-in-cimetom': 'oatmeal with apple cinnamon',
-  'umesana-jajca-z-drobnjakom': 'scrambled eggs chives',
-  'domaca-granola-z-orescki': 'homemade granola nuts',
-  'goveja-juha-z-rezanci': 'beef noodle soup broth',
-  'bucna-kremna-juha': 'pumpkin cream soup',
-  jota: 'bean sauerkraut stew',
+  'umesana-jajca-z-drobnjakom': 'scrambled eggs toast',
+  'domaca-granola-z-orescki': 'granola bowl',
+  'goveja-juha-z-rezanci': 'beef broth soup',
+  'bucna-kremna-juha': 'pumpkin soup bowl',
+  jota: 'sauerkraut soup',
   'paradiznikova-juha-z-baziliko': 'tomato soup basil',
-  'piscanec-v-smetanovi-omaki-z-gobami': 'creamy chicken mushroom',
+  'piscanec-v-smetanovi-omaki-z-gobami': 'chicken mushroom cream sauce',
   golaz: 'beef goulash',
-  'pecen-losos-z-limono-in-krompirjem': 'baked salmon lemon potatoes',
+  'pecen-losos-z-limono-in-krompirjem': 'baked salmon fillet',
   'polnjene-paprike': 'stuffed peppers tomato sauce',
   'rizota-z-jurcki': 'mushroom risotto',
   'spageti-aglio-olio': 'spaghetti aglio olio',
   'zelenjavni-curry-s-cicariko': 'chickpea curry',
-  'kuhani-skutni-struklji': 'cheese dumplings rolled',
-  'krompirjeva-solata': 'potato salad onion',
+  'kuhani-skutni-struklji': 'cottage cheese dumplings',
+  'krompirjeva-solata': 'potato salad',
   'grska-solata': 'greek salad feta',
-  'pecena-zelenjava-z-zelisci': 'roasted vegetables herbs',
-  'kuskus-solata-s-papriko': 'couscous salad',
-  'orehova-potica': 'walnut roll cake',
-  'jabolcni-zavitek': 'apple strudel',
-  'cokoladni-mousse': 'chocolate mousse',
-  'prekmurska-gibanica': 'layered cake poppy seed',
+  'pecena-zelenjava-z-zelisci': 'roasted vegetables',
+  'kuskus-solata-s-papriko': 'couscous salad bowl',
+  'orehova-potica': 'potica',
+  'jabolcni-zavitek': 'apple strudel slice',
+  'cokoladni-mousse': 'chocolate mousse glass',
+  'prekmurska-gibanica': 'layered pastry cake',
   'francoski-toast-z-jagodami': 'french toast strawberries',
   saksuka: 'shakshuka',
-  'smoothie-skleda-z-banano': 'smoothie bowl blueberries',
+  'smoothie-skleda-z-banano': 'smoothie bowl',
   'omleta-s-sirom-in-sunko': 'omelette cheese ham',
   'domaci-kruh-s-semeni': 'seeded bread loaf',
-  ricet: 'barley bean stew',
+  ricet: 'barley soup',
   'piscancja-juha-z-zelenjavo': 'chicken vegetable soup',
-  'gobova-kremna-juha': 'mushroom cream soup',
+  'gobova-kremna-juha': 'cream of mushroom soup',
   minestrone: 'minestrone soup',
   'dunajski-zrezek': 'wiener schnitzel',
   'mesne-kroglice-v-paradiznikovi-omaki': 'meatballs tomato sauce',
@@ -52,29 +53,17 @@ const QUERIES = {
   'zelenjavna-lazanja': 'vegetable lasagna',
   'falafel-z-jogurtovo-omako': 'falafel yogurt sauce',
   'pica-margerita': 'pizza margherita',
-  'ocvrti-sir-s-tatarsko-omako': 'fried cheese breaded',
-  'ajdova-kasa-z-gobami': 'buckwheat mushrooms',
-  'krompirjev-pire': 'mashed potatoes',
+  'ocvrti-sir-s-tatarsko-omako': 'breaded fried cheese',
+  'ajdova-kasa-z-gobami': 'kasha mushrooms',
+  'krompirjev-pire': 'mashed potatoes bowl',
   'fizolova-solata-z-bucnim-oljem': 'bean salad red onion',
-  'zeljna-solata-z-jogurtovim-prelivom': 'coleslaw',
+  'zeljna-solata-z-jogurtovim-prelivom': 'cabbage salad',
   'rizi-bizi': 'rice with peas',
   tiramisu: 'tiramisu',
   'cokoladni-piskoti': 'chocolate chip cookies',
-  'panna-cotta-z-jagodno-omako': 'panna cotta strawberry',
+  'panna-cotta-z-jagodno-omako': 'panna cotta dessert',
   'bananin-kruh': 'banana bread',
-  'kremna-rezina': 'cream slice custard cake',
-}
-
-const env = Object.fromEntries(
-  readFileSync(new URL('../.env', import.meta.url), 'utf8')
-    .split(/\r?\n/)
-    .filter((l) => l.includes('='))
-    .map((l) => [l.slice(0, l.indexOf('=')).trim(), l.slice(l.indexOf('=') + 1).trim()]),
-)
-const KEY = env.PEXELS_API_KEY
-if (!KEY) {
-  console.error('Manjka PEXELS_API_KEY v .env')
-  process.exit(1)
+  'kremna-rezina': 'cremeschnitte',
 }
 
 const args = process.argv.slice(2)
@@ -83,11 +72,14 @@ const only = args.filter((a) => !a.startsWith('--'))
 
 const outDir = new URL('../public/images/recipes/', import.meta.url)
 mkdirSync(outDir, { recursive: true })
-const creditsFile = new URL('./image-credits.json', import.meta.url)
+const creditsFile = new URL('../src/data/image-credits.json', import.meta.url)
+mkdirSync(new URL('.', creditsFile), { recursive: true })
 const credits = existsSync(creditsFile) ? JSON.parse(readFileSync(creditsFile, 'utf8')) : {}
 
 const missingQuery = recipes.filter((r) => !QUERIES[r.slug]).map((r) => r.slug)
 if (missingQuery.length) console.warn('Brez iskalnega niza:', missingQuery.join(', '))
+
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 
 for (const r of recipes) {
   if (only.length && !only.includes(r.slug)) continue
@@ -95,37 +87,47 @@ for (const r of recipes) {
   if (existsSync(file) && !force && !only.length) continue
 
   const query = QUERIES[r.slug] ?? r.title
-  // Pri ponovnem prenosu posameznega recepta vzamemo naslednji zadetek, da dobimo drugo sliko.
-  const skip = only.length && credits[r.slug] ? (credits[r.slug].pick ?? 0) + 1 : 0
   const res = await fetch(
-    `https://api.pexels.com/v1/search?query=${encodeURIComponent(query)}&orientation=landscape&per_page=10`,
-    { headers: { Authorization: KEY } },
+    `https://api.openverse.org/v1/images/?q=${encodeURIComponent(query)}&license=cc0,pdm,by&aspect_ratio=wide&size=medium,large&mature=false&page_size=20`,
+    { headers: { 'User-Agent': 'RecipeHub student project (FERI UM)' } },
   )
   if (!res.ok) {
-    console.error(`${r.slug}: Pexels napaka ${res.status}`)
+    console.error(`${r.slug}: Openverse napaka ${res.status}`)
+    await sleep(2000)
     continue
   }
-  const { photos } = await res.json()
-  const photo = photos?.[skip % Math.max(photos.length, 1)]
-  if (!photo) {
-    console.warn(`${r.slug}: ni zadetkov za "${query}"`)
-    continue
-  }
+  const { results } = await res.json()
+  // Pri ponovnem prenosu posameznega recepta preskočimo že uporabljene zadetke.
+  const tried = new Set(only.length ? (credits[r.slug]?.rejected ?? []).concat(credits[r.slug]?.id ?? []) : [])
+  const candidates = (results ?? []).filter((x) => x.width >= 640 && !tried.has(x.id))
 
-  const img = await fetch(photo.src.large2x)
-  const buffer = Buffer.from(await img.arrayBuffer())
-  await sharp(buffer).resize(800, 600, { fit: 'cover' }).webp({ quality: 74 }).toFile(fileURLToPath(file))
-
-  credits[r.slug] = {
-    pick: skip,
-    query,
-    photographer: photo.photographer,
-    photographer_url: photo.photographer_url,
-    pexels_url: photo.url,
-    alt: photo.alt,
+  let saved = false
+  for (const photo of candidates) {
+    try {
+      const img = await fetch(photo.url, { headers: { 'User-Agent': 'RecipeHub student project (FERI UM)' } })
+      if (!img.ok) continue
+      const buffer = Buffer.from(await img.arrayBuffer())
+      await sharp(buffer).resize(800, 600, { fit: 'cover' }).webp({ quality: 74 }).toFile(fileURLToPath(file))
+      credits[r.slug] = {
+        id: photo.id,
+        rejected: [...tried],
+        title: photo.title,
+        creator: photo.creator,
+        creator_url: photo.creator_url,
+        license: `${photo.license === 'pdm' ? 'Public Domain Mark' : photo.license.toUpperCase()} ${photo.license_version ?? ''}`.trim(),
+        license_url: photo.license_url,
+        source_url: photo.foreign_landing_url,
+      }
+      console.log(`✔ ${r.slug} ← ${photo.creator ?? 'neznan avtor'} (${photo.license})`)
+      writeFileSync(creditsFile, JSON.stringify(credits, null, 2) + '\n')
+      saved = true
+      break
+    } catch {
+      // poškodovana ali nedosegljiva slika – poskusi naslednjo
+    }
   }
-  console.log(`✔ ${r.slug} ← ${photo.photographer}`)
-  await new Promise((resolve) => setTimeout(resolve, 250))
+  if (!saved) console.warn(`✘ ${r.slug}: ni ustrezne slike za "${query}"`)
+  await sleep(1100)
 }
 
 writeFileSync(creditsFile, JSON.stringify(credits, null, 2) + '\n')

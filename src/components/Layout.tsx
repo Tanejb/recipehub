@@ -99,7 +99,10 @@ export default function Layout() {
           <div>
             <h2>O projektu</h2>
             <p style={{ marginTop: 0 }}>
-              Študijski projekt pri predmetu Vrednotenje uporabniških vmesnikov, FERI UM. Fotografije: Pexels.
+              Študijski projekt pri predmetu Vrednotenje uporabniških vmesnikov, FERI UM.
+            </p>
+            <p>
+              <Link to="/viri-fotografij">Viri fotografij</Link> (Openverse, CC BY)
             </p>
           </div>
         </div>
