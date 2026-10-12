@@ -18,10 +18,12 @@ export async function getCategoriesWithCounts(): Promise<CategoryWithCount[]> {
   }))
 }
 
-export async function getTopRatedRecipes(limit: number): Promise<RecipeSummary[]> {
-  const { data, error } = await supabase
-    .from('recipes_with_rating')
-    .select(SUMMARY_COLUMNS)
+type ListOptions = { withImage?: boolean }
+
+export async function getTopRatedRecipes(limit: number, { withImage = false }: ListOptions = {}): Promise<RecipeSummary[]> {
+  let query = supabase.from('recipes_with_rating').select(SUMMARY_COLUMNS)
+  if (withImage) query = query.not('image_url', 'is', null)
+  const { data, error } = await query
     .order('rating_avg', { ascending: false, nullsFirst: false })
     .order('rating_count', { ascending: false })
     .limit(limit)
@@ -29,10 +31,14 @@ export async function getTopRatedRecipes(limit: number): Promise<RecipeSummary[]
   return data as RecipeSummary[]
 }
 
-export async function getQuickRecipes(maxMinutes: number, limit: number): Promise<RecipeSummary[]> {
-  const { data, error } = await supabase
-    .from('recipes_with_rating')
-    .select(SUMMARY_COLUMNS)
+export async function getQuickRecipes(
+  maxMinutes: number,
+  limit: number,
+  { withImage = false }: ListOptions = {},
+): Promise<RecipeSummary[]> {
+  let query = supabase.from('recipes_with_rating').select(SUMMARY_COLUMNS)
+  if (withImage) query = query.not('image_url', 'is', null)
+  const { data, error } = await query
     .lte('prep_minutes', maxMinutes)
     .order('rating_count', { ascending: false })
     .limit(limit)

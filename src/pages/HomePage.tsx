@@ -20,9 +20,10 @@ function dayIndex(length: number) {
 
 export default function HomePage() {
   usePageTitle()
-  const top = useAsync(() => getTopRatedRecipes(12), [])
+  // Na domači strani prikazujemo samo recepte s fotografijo.
+  const top = useAsync(() => getTopRatedRecipes(12, { withImage: true }), [])
   const categories = useAsync(getCategoriesWithCounts, [])
-  const quick = useAsync(() => getQuickRecipes(30, 4), [])
+  const quick = useAsync(() => getQuickRecipes(30, 4, { withImage: true }), [])
 
   const featured = top.data?.length ? top.data[dayIndex(top.data.length)] : undefined
   const topRest = top.data?.filter((r) => r.id !== featured?.id).slice(0, 5) ?? []
