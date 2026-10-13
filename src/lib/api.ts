@@ -1,5 +1,6 @@
-import { supabase } from './supabase'
-import type { CategoryWithCount, Difficulty, RecipeSummary } from './types'
+import { ensureVisitor, supabase } from './supabase'
+import type { CategoryWithCount, Difficulty, Recipe, RecipeSummary } from './types'
+import { unitLemma } from './units'
 
 // Vsi klici v bazo so zbrani tukaj, da komponente ne poznajo podrobnosti Supabase.
 
@@ -109,4 +110,142 @@ export async function searchRecipes(filters: RecipeFilters): Promise<RecipeSumma
   const { data, error } = await query
   if (error) throw error
   return data as RecipeSummary[]
+}
+
+// --- Posamezen recept ------------------------------------------------------
+
+export async function getRecipeBySlug(slug: string): Promise<Recipe | null> {
+  const { data, error } = await supabase.from('recipes_with_rating').select('*').eq('slug', slug).maybeSingle()
+  if (error) throw error
+  return data as Recipe | null
+}
+
+export async function getRelatedRecipes(categorySlug: string, excludeId: number, limit: number): Promise<RecipeSummary[]> {
+  const { data, error } = await supabase
+    .from('recipes_with_rating')
+    .select(SUMMARY_COLUMNS)
+    .eq('category_slug', categorySlug)
+    .neq('id', excludeId)
+    .not('image_url', 'is', null)
+    .order('rating_avg', { ascending: false, nullsFirst: false })
+    .limit(limit)
+  if (error) throw error
+  return data as RecipeSummary[]
+}
+
+// --- Ocene ------------------------------------------------------------------
+
+export async function getMyRating(recipeId: number): Promise<number | null> {
+  const userId = await ensureVisitor()
+  const { data, error } = await supabase
+    .from('ratings')
+    .select('stars')
+    .eq('recipe_id', recipeId)
+    .eq('user_id', userId)
+    .maybeSingle()
+  if (error) throw error
+  return data?.stars ?? null
+}
+
+export async function rateRecipe(recipeId: number, stars: number): Promise<void> {
+  const userId = await ensureVisitor()
+  const { error } = await supabase
+    .from('ratings')
+    .upsert({ recipe_id: recipeId, user_id: userId, stars }, { onConflict: 'recipe_id,user_id' })
+  if (error) throw error
+}
+
+export async function removeMyRating(recipeId: number): Promise<void> {
+  const userId = await ensureVisitor()
+  const { error } = await supabase.from('ratings').delete().eq('recipe_id', recipeId).eq('user_id', userId)
+  if (error) throw error
+}
+
+// --- Priljubljeni -------------------------------------------------------------
+
+export async function getFavoriteIds(): Promise<number[]> {
+  await ensureVisitor()
+  const { data, error } = await supabase.from('favorites').select('recipe_id')
+  if (error) throw error
+  return data.map((f) => f.recipe_id as number)
+}
+
+export async function setFavorite(recipeId: number, favorite: boolean): Promise<void> {
+  const userId = await ensureVisitor()
+  const { error } = favorite
+    ? await supabase.from('favorites').upsert({ user_id: userId, recipe_id: recipeId }, { onConflict: 'user_id,recipe_id' })
+    : await supabase.from('favorites').delete().eq('user_id', userId).eq('recipe_id', recipeId)
+  if (error) throw error
+}
+
+// --- Nakupovalni seznam ---------------------------------------------------------
+
+export type ShoppingItem = {
+  id: number
+  recipe_id: number | null
+  name: string
+  amount: number | null
+  unit: string
+  checked: boolean
+  created_at: string
+}
+
+export async function getShoppingItems(): Promise<ShoppingItem[]> {
+  await ensureVisitor()
+  const { data, error } = await supabase
+    .from('shopping_items')
+    .select('id, recipe_id, name, amount, unit, checked, created_at')
+    .order('created_at')
+    .order('id')
+  if (error) throw error
+  return data as ShoppingItem[]
+}
+
+/**
+ * Doda sestavine na seznam. Če je ista sestavina z isto enoto že na seznamu (in še ni
+ * odkljukana), se količini seštejeta, namesto da bi nastala podvojena vrstica.
+ * Vrne število novih in posodobljenih vrstic.
+ */
+export async function addIngredientsToShoppingList(
+  recipeId: number,
+  ingredients: { name: string; amount: number | null; unit: string }[],
+): Promise<{ added: number; updated: number }> {
+  const userId = await ensureVisitor()
+  const existing = await getShoppingItems()
+  const key = (name: string, unit: string) => `${name.trim().toLowerCase()}|${unitLemma(unit)}`
+  const open = new Map(existing.filter((i) => !i.checked).map((i) => [key(i.name, i.unit), i]))
+
+  const inserts: Omit<ShoppingItem, 'id' | 'checked' | 'created_at'>[] = []
+  const updates: { id: number; amount: number }[] = []
+
+  for (const ing of ingredients) {
+    const unit = unitLemma(ing.unit)
+    const match = open.get(key(ing.name, unit))
+    if (!match) {
+      inserts.push({ recipe_id: recipeId, name: ing.name, amount: ing.amount, unit })
+    } else if (ing.amount != null && match.amount != null) {
+      updates.push({ id: match.id, amount: Math.round((match.amount + ing.amount) * 100) / 100 })
+    }
+    // »sol po okusu«, ki je že na seznamu, ne podvajamo.
+  }
+
+  if (inserts.length) {
+    const { error } = await supabase.from('shopping_items').insert(inserts.map((i) => ({ ...i, user_id: userId })))
+    if (error) throw error
+  }
+  for (const u of updates) {
+    const { error } = await supabase.from('shopping_items').update({ amount: u.amount }).eq('id', u.id)
+    if (error) throw error
+  }
+  return { added: inserts.length, updated: updates.length }
+}
+
+export async function countOpenShoppingItems(): Promise<number> {
+  await ensureVisitor()
+  const { count, error } = await supabase
+    .from('shopping_items')
+    .select('id', { count: 'exact', head: true })
+    .eq('checked', false)
+  if (error) throw error
+  return count ?? 0
 }

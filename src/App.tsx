@@ -4,6 +4,7 @@ import HomePage from './pages/HomePage'
 import NotFoundPage from './pages/NotFoundPage'
 import PhotoCreditsPage from './pages/PhotoCreditsPage'
 import PlaceholderPage from './pages/PlaceholderPage'
+import RecipeDetailPage from './pages/RecipeDetailPage'
 import RecipesPage from './pages/RecipesPage'
 
 export default function App() {
@@ -12,10 +13,7 @@ export default function App() {
       <Route element={<Layout />}>
         <Route index element={<HomePage />} />
         <Route path="recepti" element={<RecipesPage />} />
-        <Route
-          path="recepti/:slug"
-          element={<PlaceholderPage title="Recept" intro="Podrobnosti recepta, ocenjevanje in priljubljeni." />}
-        />
+        <Route path="recepti/:slug" element={<RecipeDetailPage />} />
         <Route
           path="kategorije"
           element={<PlaceholderPage title="Kategorije" intro="Pregled receptov po kategorijah." />}

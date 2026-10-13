@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
+import { useUserData } from '../state/UserData'
 
 const NAV = [
   { to: '/recepti', label: 'Recepti' },
@@ -18,6 +19,11 @@ const today = new Intl.DateTimeFormat('sl-SI', {
 export default function Layout() {
   const { pathname } = useLocation()
   const [menuOpen, setMenuOpen] = useState(false)
+  const { favoriteIds, shoppingCount } = useUserData()
+  const counts: Record<string, number> = {
+    '/priljubljeni': favoriteIds.size,
+    '/nakupovalni-seznam': shoppingCount,
+  }
 
   // Ob menjavi strani zapri mobilni meni in skoči na vrh.
   useEffect(() => {
@@ -58,7 +64,16 @@ export default function Layout() {
             <ul>
               {NAV.map((item) => (
                 <li key={item.to}>
-                  <NavLink to={item.to}>{item.label}</NavLink>
+                  <NavLink to={item.to}>
+                    {item.label}
+                    {counts[item.to] > 0 && (
+                      <span className="nav-count">
+                        <span className="visually-hidden">(</span>
+                        {counts[item.to]}
+                        <span className="visually-hidden">)</span>
+                      </span>
+                    )}
+                  </NavLink>
                 </li>
               ))}
               <li>
