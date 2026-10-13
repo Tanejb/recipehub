@@ -1899,3 +1899,25 @@ textarea {
 .field-row {
   align-items: end;
 }
+
+.stepper-sm button {
+  width: 2rem;
+  height: 2.1rem;
+  font-size: 1.15rem;
+}
+
+.amount-edit .stepper-sm input {
+  width: 3.75rem;
+  border: 0;
+  border-inline: 1px solid var(--rule);
+  border-radius: 0;
+  text-align: center;
+  padding: 0.3rem 0.25rem;
+  background: var(--card);
+  font-weight: 600;
+}
+
+.amount-edit .stepper-sm input:focus-visible {
+  outline: 3px solid var(--accent-strong);
+  outline-offset: 0;
+}

@@ -21,6 +21,15 @@ const UNIT_SUGGESTIONS = ['g', 'kg', 'ml', 'l', 'kos', 'žlica', 'žlička', 'st
 
 type Group = { key: string; title: string; slug?: string; items: ShoppingItem[] }
 
+/** Korak za gumba − / + glede na enoto: grami po 10/50, kosi in žlice po ½/1. */
+function amountStep(unit: string, value: number): number {
+  if (unit === 'g' || unit === 'ml') return value < 100 ? 10 : 50
+  return value < 2 ? 0.5 : 1
+}
+
+const parseAmount = (text: string) => Number(text.replace(',', '.'))
+const showAmount = (n: number) => String(Math.round(n * 100) / 100).replace('.', ',')
+
 /** Postavke, združene po receptu (v vrstnem redu dodajanja); ročno dodane so na koncu. */
 function groupItems(list: ShoppingList): Group[] {
   const groups = new Map<string, Group>()
@@ -319,9 +328,16 @@ function ShoppingRow({
 
   function save(e: FormEvent) {
     e.preventDefault()
-    const n = Number(value.replace(',', '.'))
+    const n = parseAmount(value)
     if (n > 0) onAmount(Math.round(n * 100) / 100)
     setEditing(false)
+  }
+
+  function nudge(direction: 1 | -1) {
+    const current = parseAmount(value) || 0
+    const step = amountStep(item.unit, direction === 1 ? current : current - 0.001)
+    const next = Math.max(step, current + direction * step)
+    setValue(showAmount(next))
   }
 
   return (
@@ -343,14 +359,28 @@ function ShoppingRow({
           <label htmlFor={inputId} className="visually-hidden">
             Nova količina za {item.name}
           </label>
-          <input
-            id={inputId}
-            inputMode="decimal"
-            value={value}
-            onChange={(e) => setValue(e.target.value)}
-            autoFocus
-            onKeyDown={(e) => e.key === 'Escape' && setEditing(false)}
-          />
+          <div className="stepper stepper-sm" role="group" aria-label={`Količina za ${item.name}`}>
+            <button type="button" onClick={() => nudge(-1)} aria-label="Zmanjšaj količino">
+              −
+            </button>
+            <input
+              id={inputId}
+              inputMode="decimal"
+              value={value}
+              onChange={(e) => setValue(e.target.value)}
+              autoFocus
+              onKeyDown={(e) => {
+                if (e.key === 'Escape') setEditing(false)
+                if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                  e.preventDefault()
+                  nudge(e.key === 'ArrowUp' ? 1 : -1)
+                }
+              }}
+            />
+            <button type="button" onClick={() => nudge(1)} aria-label="Povečaj količino">
+              +
+            </button>
+          </div>
           <span className="amount-unit">{item.unit}</span>
           <button type="submit" className="link-button">
             Shrani
