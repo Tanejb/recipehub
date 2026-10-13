@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { countOpenShoppingItems, getFavoriteIds, setFavorite } from '../lib/api'
 
 // Podatki trenutnega (anonimnega) obiskovalca, ki jih potrebuje več strani hkrati:
@@ -8,6 +8,7 @@ type UserData = {
   favoriteIds: Set<number>
   isFavorite: (recipeId: number) => boolean
   toggleFavorite: (recipeId: number) => Promise<boolean>
+  setFavoriteTo: (recipeId: number, favorite: boolean) => Promise<void>
   shoppingCount: number
   refreshShoppingCount: () => Promise<void>
 }
@@ -27,32 +28,37 @@ export function UserDataProvider({ children }: { children: ReactNode }) {
       .catch((e) => console.warn('Nakupovalnega seznama ni bilo mogoče naložiti', e))
   }, [])
 
+  // Ref z zadnjim stanjem, da npr. »Razveljavi« iz starega obvestila ne bere zastarelih podatkov.
+  const latest = useRef(favoriteIds)
+  latest.current = favoriteIds
+
   const isFavorite = useCallback((id: number) => favoriteIds.has(id), [favoriteIds])
 
-  const toggleFavorite = useCallback(
-    async (recipeId: number) => {
-      const next = !favoriteIds.has(recipeId)
-      // Optimistično posodobimo vmesnik; ob napaki stanje vrnemo.
+  const setFavoriteTo = useCallback(async (recipeId: number, favorite: boolean) => {
+    const apply = (on: boolean) =>
       setFavoriteIds((prev) => {
         const s = new Set(prev)
-        if (next) s.add(recipeId)
+        if (on) s.add(recipeId)
         else s.delete(recipeId)
         return s
       })
-      try {
-        await setFavorite(recipeId, next)
-      } catch (e) {
-        setFavoriteIds((prev) => {
-          const s = new Set(prev)
-          if (next) s.delete(recipeId)
-          else s.add(recipeId)
-          return s
-        })
-        throw e
-      }
+    // Optimistično posodobimo vmesnik; ob napaki stanje vrnemo.
+    apply(favorite)
+    try {
+      await setFavorite(recipeId, favorite)
+    } catch (e) {
+      apply(!favorite)
+      throw e
+    }
+  }, [])
+
+  const toggleFavorite = useCallback(
+    async (recipeId: number) => {
+      const next = !latest.current.has(recipeId)
+      await setFavoriteTo(recipeId, next)
       return next
     },
-    [favoriteIds],
+    [setFavoriteTo],
   )
 
   const refreshShoppingCount = useCallback(async () => {
@@ -60,8 +66,8 @@ export function UserDataProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const value = useMemo(
-    () => ({ favoriteIds, isFavorite, toggleFavorite, shoppingCount, refreshShoppingCount }),
-    [favoriteIds, isFavorite, toggleFavorite, shoppingCount, refreshShoppingCount],
+    () => ({ favoriteIds, isFavorite, toggleFavorite, setFavoriteTo, shoppingCount, refreshShoppingCount }),
+    [favoriteIds, isFavorite, toggleFavorite, setFavoriteTo, shoppingCount, refreshShoppingCount],
   )
   return <UserDataContext.Provider value={value}>{children}</UserDataContext.Provider>
 }

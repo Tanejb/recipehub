@@ -1,5 +1,8 @@
 import { Route, Routes } from 'react-router-dom'
 import Layout from './components/Layout'
+import CategoriesPage from './pages/CategoriesPage'
+import CategoryPage from './pages/CategoryPage'
+import FavoritesPage from './pages/FavoritesPage'
 import HomePage from './pages/HomePage'
 import NotFoundPage from './pages/NotFoundPage'
 import PhotoCreditsPage from './pages/PhotoCreditsPage'
@@ -14,18 +17,9 @@ export default function App() {
         <Route index element={<HomePage />} />
         <Route path="recepti" element={<RecipesPage />} />
         <Route path="recepti/:slug" element={<RecipeDetailPage />} />
-        <Route
-          path="kategorije"
-          element={<PlaceholderPage title="Kategorije" intro="Pregled receptov po kategorijah." />}
-        />
-        <Route
-          path="kategorije/:slug"
-          element={<PlaceholderPage title="Kategorija" intro="Recepti izbrane kategorije." />}
-        />
-        <Route
-          path="priljubljeni"
-          element={<PlaceholderPage title="Priljubljeni" intro="Recepti, ki si jih shranil." />}
-        />
+        <Route path="kategorije" element={<CategoriesPage />} />
+        <Route path="kategorije/:slug" element={<CategoryPage />} />
+        <Route path="priljubljeni" element={<FavoritesPage />} />
         <Route
           path="nakupovalni-seznam"
           element={<PlaceholderPage title="Nakupovalni seznam" intro="Sestavine, ki jih moraš kupiti." />}

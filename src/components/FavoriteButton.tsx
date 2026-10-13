@@ -5,7 +5,7 @@ import { useUserData } from '../state/UserData'
 type Props = { recipeId: number; recipeTitle: string; variant?: 'full' | 'icon' }
 
 export default function FavoriteButton({ recipeId, recipeTitle, variant = 'full' }: Props) {
-  const { isFavorite, toggleFavorite } = useUserData()
+  const { isFavorite, toggleFavorite, setFavoriteTo } = useUserData()
   const toast = useToast()
   const [busy, setBusy] = useState(false)
   const active = isFavorite(recipeId)
@@ -14,9 +14,13 @@ export default function FavoriteButton({ recipeId, recipeTitle, variant = 'full'
     setBusy(true)
     try {
       const added = await toggleFavorite(recipeId)
-      toast(added ? `»${recipeTitle}« je med priljubljenimi.` : `»${recipeTitle}« ni več med priljubljenimi.`, {
-        link: added ? { to: '/priljubljeni', label: 'Odpri priljubljene' } : undefined,
-      })
+      if (added) {
+        toast(`»${recipeTitle}« je med priljubljenimi.`, { link: { to: '/priljubljeni', label: 'Odpri priljubljene' } })
+      } else {
+        toast(`»${recipeTitle}« ni več med priljubljenimi.`, {
+          action: { label: 'Razveljavi', onClick: () => void setFavoriteTo(recipeId, true) },
+        })
+      }
     } catch {
       toast('Spremembe ni bilo mogoče shraniti. Poskusi znova.', { tone: 'error' })
     } finally {

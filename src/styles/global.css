@@ -1474,3 +1474,140 @@ textarea {
     animation: none;
   }
 }
+
+/* --- Kategorije --------------------------------------------------------------- */
+
+.category-tiles {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2.5rem 1.5rem;
+}
+
+.category-tile {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.2rem 0.9rem;
+  text-decoration: none;
+}
+
+.category-tile .recipe-image {
+  grid-column: 1 / -1;
+  aspect-ratio: 4 / 3;
+  margin-bottom: 0.75rem;
+}
+
+.category-tile img {
+  transition: transform 0.4s ease;
+}
+
+.category-tile:hover img {
+  transform: scale(1.03);
+}
+
+.tile-no {
+  font-family: var(--serif);
+  font-style: italic;
+  color: var(--accent);
+  font-size: 1.1rem;
+  grid-row: span 3;
+  padding-top: 0.35rem;
+}
+
+.tile-name {
+  font-family: var(--serif);
+  font-size: 1.7rem;
+  font-weight: 600;
+  line-height: 1.15;
+}
+
+.category-tile:hover .tile-name {
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 5px;
+}
+
+.tile-desc {
+  color: var(--ink-soft);
+}
+
+.tile-count {
+  font-weight: 600;
+  font-size: 0.9rem;
+  margin-top: 0.3rem;
+}
+
+@media (max-width: 1000px) {
+  .category-tiles {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 560px) {
+  .category-tiles {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .category-tile img {
+    transition: none;
+  }
+}
+
+.results-tools {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+/* --- Prazna stanja -------------------------------------------------------------- */
+
+.empty-state {
+  display: grid;
+  justify-items: start;
+  gap: 1rem;
+  max-width: 560px;
+  padding-block: 2rem 1rem;
+}
+
+.empty-state h2 {
+  font-size: clamp(1.6rem, 3vw, 2.2rem);
+}
+
+.empty-state p {
+  color: var(--ink-soft);
+  font-size: 1.05rem;
+}
+
+.empty-mark {
+  font-family: var(--serif);
+  font-size: 4.5rem;
+  line-height: 1;
+  color: var(--accent);
+}
+
+.empty-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.toast-action {
+  background: none;
+  border: 1px solid #f3c6ad;
+  color: #f3c6ad;
+  border-radius: var(--radius);
+  padding: 0.3rem 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.toast-action:hover {
+  background: rgba(243, 198, 173, 0.15);
+}

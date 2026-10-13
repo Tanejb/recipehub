@@ -249,3 +249,39 @@ export async function countOpenShoppingItems(): Promise<number> {
   if (error) throw error
   return count ?? 0
 }
+
+// --- Kategorije in priljubljeni (seznami) ---------------------------------------
+
+/** Naslovna fotografija vsake kategorije: najbolje ocenjen recept s fotografijo. */
+export async function getCategoryCovers(): Promise<Record<string, string>> {
+  const { data, error } = await supabase
+    .from('recipes_with_rating')
+    .select('category_slug, image_url')
+    .not('image_url', 'is', null)
+    .order('rating_avg', { ascending: false, nullsFirst: false })
+  if (error) throw error
+  const covers: Record<string, string> = {}
+  for (const r of data) covers[r.category_slug as string] ??= r.image_url as string
+  return covers
+}
+
+export async function getCategoryBySlug(slug: string): Promise<CategoryWithCount | null> {
+  const categories = await getCategoriesWithCounts()
+  return categories.find((c) => c.slug === slug) ?? null
+}
+
+/** Priljubljeni recepti, nazadnje dodani na začetku. */
+export async function getFavoriteRecipes(): Promise<RecipeSummary[]> {
+  await ensureVisitor()
+  const { data: favs, error } = await supabase
+    .from('favorites')
+    .select('recipe_id, created_at')
+    .order('created_at', { ascending: false })
+  if (error) throw error
+  if (!favs.length) return []
+  const ids = favs.map((f) => f.recipe_id as number)
+  const { data, error: e2 } = await supabase.from('recipes_with_rating').select(SUMMARY_COLUMNS).in('id', ids)
+  if (e2) throw e2
+  const byId = new Map((data as RecipeSummary[]).map((r) => [r.id, r]))
+  return ids.map((id) => byId.get(id)).filter((r): r is RecipeSummary => Boolean(r))
+}

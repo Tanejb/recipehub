@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import type { RecipeSummary } from '../lib/types'
+import FavoriteButton from './FavoriteButton'
 import RecipeImage from './RecipeImage'
 import RecipeMeta from './RecipeMeta'
 
@@ -27,6 +28,8 @@ export default function RecipeCard({ recipe, showDescription = false, headingLev
       </Heading>
       {showDescription && <p className="card-desc">{recipe.description}</p>}
       <RecipeMeta recipe={recipe} />
+      {/* V DOM-u za naslovom, da bralnik zaslona najprej prebere recept; vizualno je na sliki. */}
+      <FavoriteButton recipeId={recipe.id} recipeTitle={recipe.title} variant="icon" />
     </article>
   )
 }
