@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { useRef, useState } from 'react'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import credits from '../data/image-credits.json'
 import FavoriteButton from '../components/FavoriteButton'
 import RatingInput from '../components/RatingInput'
@@ -10,6 +10,7 @@ import { useAsync } from '../hooks/useAsync'
 import { usePageTitle } from '../hooks/usePageTitle'
 import {
   addIngredientsToShoppingList,
+  deleteRecipe,
   getMyRating,
   getRecipeBySlug,
   getRelatedRecipes,
@@ -17,6 +18,7 @@ import {
   removeMyRating,
 } from '../lib/api'
 import { difficultyLabel, formatMinutes, formatRating, plural } from '../lib/format'
+import { ensureVisitor } from '../lib/supabase'
 import type { Recipe } from '../lib/types'
 import { formatQuantity } from '../lib/units'
 import { useToast } from '../state/Toast'
@@ -56,6 +58,23 @@ function RecipeArticle({ recipe, onRatingChanged }: { recipe: Recipe; onRatingCh
   const [savingRating, setSavingRating] = useState(false)
   const related = useAsync(() => getRelatedRecipes(recipe.category_slug, recipe.id, 3), [recipe.id])
   const credit = (credits as Record<string, Credit>)[recipe.slug]
+  const visitor = useAsync(ensureVisitor, [])
+  const isMine = !recipe.is_seed && recipe.author_id != null && recipe.author_id === visitor.data
+  const navigate = useNavigate()
+  const deleteDialog = useRef<HTMLDialogElement>(null)
+  const [deleting, setDeleting] = useState(false)
+
+  async function onDelete() {
+    setDeleting(true)
+    try {
+      await deleteRecipe(recipe)
+      toast(`Recept »${recipe.title}« je izbrisan.`)
+      navigate('/recepti', { replace: true })
+    } catch {
+      toast('Recepta ni bilo mogoče izbrisati. Poskusi znova.', { tone: 'error' })
+      setDeleting(false)
+    }
+  }
 
   const selectedCount = selected.filter(Boolean).length
 
@@ -128,7 +147,10 @@ function RecipeArticle({ recipe, onRatingChanged }: { recipe: Recipe; onRatingCh
         </nav>
 
         <header className="article-head">
-          <span className="kicker">{recipe.category_name}</span>
+          <span className="kicker">
+            {recipe.category_name}
+            {isMine && <span className="mine-badge">Tvoj recept</span>}
+          </span>
           <h1>{recipe.title}</h1>
           <p className="article-lead">{recipe.description}</p>
 
@@ -164,7 +186,26 @@ function RecipeArticle({ recipe, onRatingChanged }: { recipe: Recipe; onRatingCh
             <a href="#sestavine" className="btn btn-ghost">
               Na sestavine ↓
             </a>
+            {isMine && (
+              <button type="button" className="link-button danger" onClick={() => deleteDialog.current?.showModal()}>
+                Izbriši recept
+              </button>
+            )}
           </div>
+          <dialog ref={deleteDialog} className="confirm-dialog" aria-labelledby="brisanje-naslov">
+            <form method="dialog">
+              <h2 id="brisanje-naslov">Izbrišem recept »{recipe.title}«?</h2>
+              <p>Recept bo odstranjen za vse obiskovalce, skupaj z ocenami in fotografijo. Tega ni mogoče razveljaviti.</p>
+              <div className="dialog-actions">
+                <button value="cancel" className="btn btn-ghost" autoFocus>
+                  Prekliči
+                </button>
+                <button value="confirm" className="btn btn-danger" onClick={onDelete} disabled={deleting}>
+                  Izbriši recept
+                </button>
+              </div>
+            </form>
+          </dialog>
         </header>
 
         <figure className="article-figure">

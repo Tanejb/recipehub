@@ -1,5 +1,6 @@
 import { ensureVisitor, supabase } from './supabase'
 import type { CategoryWithCount, Difficulty, Recipe, RecipeSummary } from './types'
+import { slugify } from './slug'
 import { unitLemma } from './units'
 
 // Vsi klici v bazo so zbrani tukaj, da komponente ne poznajo podrobnosti Supabase.
@@ -341,4 +342,68 @@ export async function restoreShoppingItems(items: ShoppingItem[]): Promise<void>
     })),
   )
   if (error) throw error
+}
+
+// --- Dodajanje in brisanje receptov ------------------------------------------------
+
+const IMAGE_BUCKET = 'recipe-images'
+
+export type NewRecipe = {
+  title: string
+  description: string
+  categoryId: number
+  prepMinutes: number
+  difficulty: Difficulty
+  servings: number
+  ingredients: { name: string; amount: number | null; unit: string }[]
+  steps: string[]
+  image: Blob | null
+}
+
+/** Naloži fotografijo (če obstaja), shrani recept in vrne njegov slug. */
+export async function createRecipe(input: NewRecipe): Promise<string> {
+  const userId = await ensureVisitor()
+  // Kratka naključna pripona, da imata lahko dva recepta isto ime.
+  const slug = `${slugify(input.title) || 'recept'}-${Math.random().toString(36).slice(2, 6)}`
+
+  let imageUrl: string | null = null
+  let imagePath: string | null = null
+  if (input.image) {
+    imagePath = `${userId}/${slug}.webp`
+    const { error } = await supabase.storage
+      .from(IMAGE_BUCKET)
+      .upload(imagePath, input.image, { contentType: 'image/webp', upsert: false })
+    if (error) throw new Error(`Fotografije ni bilo mogoče naložiti: ${error.message}`)
+    imageUrl = supabase.storage.from(IMAGE_BUCKET).getPublicUrl(imagePath).data.publicUrl
+  }
+
+  const { error } = await supabase.from('recipes').insert({
+    slug,
+    title: input.title,
+    description: input.description,
+    category_id: input.categoryId,
+    prep_minutes: input.prepMinutes,
+    difficulty: input.difficulty,
+    servings: input.servings,
+    image_url: imageUrl,
+    ingredients: input.ingredients.map((i) => ({ ...i, unit: i.amount == null && !i.unit ? 'po okusu' : i.unit })),
+    steps: input.steps,
+    author_id: userId,
+  })
+  if (error) {
+    if (imagePath) await supabase.storage.from(IMAGE_BUCKET).remove([imagePath])
+    throw error
+  }
+  return slug
+}
+
+export async function deleteRecipe(recipe: Pick<Recipe, 'id' | 'image_url'>): Promise<void> {
+  const userId = await ensureVisitor()
+  const { error } = await supabase.from('recipes').delete().eq('id', recipe.id)
+  if (error) throw error
+  const marker = `/${IMAGE_BUCKET}/`
+  if (recipe.image_url?.includes(marker)) {
+    const path = recipe.image_url.split(marker)[1]
+    if (path.startsWith(`${userId}/`)) await supabase.storage.from(IMAGE_BUCKET).remove([path])
+  }
 }

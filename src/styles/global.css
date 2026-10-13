@@ -1921,3 +1921,368 @@ textarea {
   outline: 3px solid var(--accent-strong);
   outline-offset: 0;
 }
+
+/* --- Dodajanje recepta ------------------------------------------------------------ */
+
+.add-recipe {
+  max-width: 900px;
+}
+
+.recipe-form {
+  display: grid;
+  gap: 2.5rem;
+}
+
+.form-section {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 1.1rem;
+  min-width: 0;
+}
+
+.form-section > legend {
+  font-family: var(--serif);
+  font-size: 1.8rem;
+  font-weight: 600;
+  width: 100%;
+  padding-bottom: 0.6rem;
+  border-bottom: 2px solid var(--ink);
+  margin-bottom: 1.1rem;
+}
+
+.form-section > legend .optional {
+  font-family: var(--sans);
+  font-size: 0.95rem;
+}
+
+.field-hint {
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+}
+
+.field-hint.over {
+  color: #8a1f11;
+  font-weight: 600;
+}
+
+.field textarea {
+  resize: vertical;
+  font: inherit;
+}
+
+.field-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  align-items: start;
+}
+
+.radio-group {
+  border: 0;
+  margin: 0;
+  padding: 0;
+}
+
+.radio-group legend {
+  font-weight: 600;
+  font-size: 0.9rem;
+  margin-bottom: 0.4rem;
+}
+
+.radio-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.radio-pill {
+  position: relative;
+  cursor: pointer;
+}
+
+.radio-pill input {
+  position: absolute;
+  opacity: 0;
+  inset: 0;
+  cursor: pointer;
+}
+
+.radio-pill span {
+  display: inline-block;
+  padding: 0.55rem 1.2rem;
+  border: 1.5px solid var(--ink);
+  border-radius: 999px;
+  background: #fff;
+  font-weight: 500;
+}
+
+.radio-pill input:checked + span {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.radio-pill input:focus-visible + span {
+  outline: 3px solid var(--accent-strong);
+  outline-offset: 2px;
+}
+
+.radio-group[aria-invalid='true'] .radio-pill span {
+  border-color: #8a1f11;
+}
+
+/* Fotografija */
+.dropzone {
+  display: grid;
+  place-items: center;
+  gap: 0.35rem;
+  text-align: center;
+  padding: 2.5rem 1rem;
+  border: 2px dashed var(--ink-soft);
+  border-radius: var(--radius);
+  background: var(--card);
+  cursor: pointer;
+}
+
+.dropzone:hover,
+.dropzone.is-over {
+  border-color: var(--accent-strong);
+  background: var(--paper-deep);
+}
+
+.form-section:has(.file-input:focus-visible) .dropzone,
+.form-section:has(.file-input:focus-visible) .photo-actions .btn {
+  outline: 3px solid var(--accent-strong);
+  outline-offset: 3px;
+}
+
+.dropzone-title {
+  font-family: var(--serif);
+  font-size: 1.35rem;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.dropzone-hint {
+  font-size: 0.9rem;
+  color: var(--ink-soft);
+}
+
+.photo-preview {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  gap: 1.25rem;
+  align-items: start;
+}
+
+.photo-preview img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: var(--radius);
+}
+
+.photo-name {
+  font-weight: 600;
+  word-break: break-all;
+}
+
+.photo-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 0.75rem;
+}
+
+/* Dinamični seznami */
+.dynamic-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.ingredient-row {
+  display: grid;
+  grid-template-columns: 6rem 7rem 1fr auto;
+  gap: 0.6rem;
+  align-items: end;
+}
+
+.ingredient-row .field label {
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.ingredient-row:not(:first-child) .field label {
+  /* Oznake nad vsako vrstico ostanejo za bralnike zaslona, vidne so samo v prvi. */
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+}
+
+.row-remove {
+  margin-bottom: 0.3rem;
+}
+
+.row-errors {
+  grid-column: 1 / -1;
+}
+
+.row-errors:empty {
+  display: none;
+}
+
+.step-row {
+  display: grid;
+  grid-template-columns: 3rem 1fr auto;
+  gap: 0.75rem;
+  align-items: start;
+}
+
+.step-row .step-no {
+  font-size: 1.9rem;
+  padding-top: 1.6rem;
+}
+
+.step-row .field label {
+  font-size: 0.8rem;
+}
+
+.step-tools {
+  display: flex;
+  gap: 0.15rem;
+  padding-top: 1.5rem;
+}
+
+.icon-button:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+/* Napake in akcije */
+.error-summary {
+  border: 2px solid #8a1f11;
+  border-left-width: 8px;
+  border-radius: var(--radius);
+  background: #fbefec;
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.error-summary:focus-visible {
+  outline: 3px solid var(--accent-strong);
+  outline-offset: 3px;
+}
+
+.error-summary h2 {
+  font-size: 1.25rem;
+  color: #8a1f11;
+  margin-bottom: 0.5rem;
+}
+
+.error-summary ul {
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+.error-summary a {
+  color: #8a1f11;
+  font-weight: 600;
+}
+
+.draft-notice {
+  margin-bottom: 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.form-actions {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+  padding-top: 1.5rem;
+  border-top: 2px solid var(--ink);
+}
+
+.btn-large {
+  padding: 1rem 2rem;
+  font-size: 1.05rem;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.draft-status {
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+}
+
+.mine-badge {
+  margin-left: 0.75rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  background: var(--olive);
+  color: var(--paper);
+  letter-spacing: 0.08em;
+}
+
+@media (max-width: 700px) {
+  .field-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .photo-preview {
+    grid-template-columns: 1fr;
+  }
+
+  .ingredient-row {
+    grid-template-columns: 1fr 1fr auto;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px dashed var(--rule);
+  }
+
+  .ingredient-row .field-name {
+    grid-column: 1 / 3;
+    grid-row: 2;
+  }
+
+  .ingredient-row .row-remove {
+    grid-row: 1 / 3;
+    align-self: center;
+  }
+
+  .ingredient-row:not(:first-child) .field label {
+    position: static;
+    width: auto;
+    height: auto;
+    clip: auto;
+  }
+
+  .step-row {
+    grid-template-columns: 1fr;
+  }
+
+  .step-row .step-no {
+    display: none;
+  }
+
+  .step-tools {
+    padding-top: 0;
+    justify-content: flex-end;
+  }
+}
+
+.form-section > legend .section-no {
+  margin-right: 0.6rem;
+}
