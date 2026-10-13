@@ -4,16 +4,14 @@ import HomePage from './pages/HomePage'
 import NotFoundPage from './pages/NotFoundPage'
 import PhotoCreditsPage from './pages/PhotoCreditsPage'
 import PlaceholderPage from './pages/PlaceholderPage'
+import RecipesPage from './pages/RecipesPage'
 
 export default function App() {
   return (
     <Routes>
       <Route element={<Layout />}>
         <Route index element={<HomePage />} />
-        <Route
-          path="recepti"
-          element={<PlaceholderPage title="Recepti" intro="Iskanje in filtriranje vseh receptov." />}
-        />
+        <Route path="recepti" element={<RecipesPage />} />
         <Route
           path="recepti/:slug"
           element={<PlaceholderPage title="Recept" intro="Podrobnosti recepta, ocenjevanje in priljubljeni." />}
