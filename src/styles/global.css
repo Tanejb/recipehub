@@ -2286,3 +2286,11 @@ textarea {
 .form-section > legend .section-no {
   margin-right: 0.6rem;
 }
+
+.facts dd.facts-empty {
+  font-family: var(--sans);
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--ink-soft);
+  padding-top: 0.35rem;
+}

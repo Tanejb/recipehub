@@ -157,15 +157,19 @@ function RecipeArticle({ recipe, onRatingChanged }: { recipe: Recipe; onRatingCh
           <dl className="facts">
             <div>
               <dt>Ocena</dt>
-              <dd>
-                <span aria-hidden="true" className="facts-star">
-                  ★{' '}
-                </span>
-                {formatRating(recipe.rating_avg)}{' '}
-                <span className="facts-sub">
-                  ({recipe.rating_count} {plural(recipe.rating_count, ['ocena', 'oceni', 'ocene', 'ocen'])})
-                </span>
-              </dd>
+              {recipe.rating_count === 0 ? (
+                <dd className="facts-empty">Še ni ocen</dd>
+              ) : (
+                <dd>
+                  <span aria-hidden="true" className="facts-star">
+                    ★{' '}
+                  </span>
+                  {formatRating(recipe.rating_avg)}{' '}
+                  <span className="facts-sub">
+                    ({recipe.rating_count} {plural(recipe.rating_count, ['ocena', 'oceni', 'ocene', 'ocen'])})
+                  </span>
+                </dd>
+              )}
             </div>
             <div>
               <dt>Čas priprave</dt>
