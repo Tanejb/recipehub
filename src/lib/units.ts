@@ -62,6 +62,11 @@ const COUNTED = new Set(['kos', 'strok', 'zavitek', 'vrečka', 'steblo', 'rezina
 /** Količina z enoto, npr. »2 žlici«, »1 ½ žlice«, »po okusu«. */
 export function formatQuantity(amount: number | null, unit: string): string {
   if (amount == null) return unit
+  // 2000 g → 2 kg, 1500 ml → 1,5 l
+  if ((unit === 'g' || unit === 'ml') && amount >= 1000) {
+    const big = Math.round(amount / 100) / 10
+    return `${String(big).replace('.', ',')} ${unit === 'g' ? 'kg' : 'l'}`
+  }
   if (COUNTED.has(unitLemma(unit)) && amount >= 2) amount = Math.round(amount)
   const shown = formatAmount(amount)
   // Za enoto uporabimo zaokroženo vrednost, ki jo uporabnik vidi.

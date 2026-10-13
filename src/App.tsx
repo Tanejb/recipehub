@@ -9,6 +9,7 @@ import PhotoCreditsPage from './pages/PhotoCreditsPage'
 import PlaceholderPage from './pages/PlaceholderPage'
 import RecipeDetailPage from './pages/RecipeDetailPage'
 import RecipesPage from './pages/RecipesPage'
+import ShoppingListPage from './pages/ShoppingListPage'
 
 export default function App() {
   return (
@@ -20,10 +21,7 @@ export default function App() {
         <Route path="kategorije" element={<CategoriesPage />} />
         <Route path="kategorije/:slug" element={<CategoryPage />} />
         <Route path="priljubljeni" element={<FavoritesPage />} />
-        <Route
-          path="nakupovalni-seznam"
-          element={<PlaceholderPage title="Nakupovalni seznam" intro="Sestavine, ki jih moraš kupiti." />}
-        />
+        <Route path="nakupovalni-seznam" element={<ShoppingListPage />} />
         <Route
           path="dodaj-recept"
           element={<PlaceholderPage title="Dodaj recept" intro="Deli svoj recept z drugimi." />}

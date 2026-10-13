@@ -229,8 +229,15 @@ function RecipeArticle({ recipe, onRatingChanged }: { recipe: Recipe; onRatingCh
                       onChange={() => setSelected((s) => s.map((v, j) => (j === i ? !v : v)))}
                     />
                     <span className={selected[i] ? '' : 'have'}>
-                      <strong>{formatQuantity(ing.amount == null ? null : ing.amount * scale, ing.unit)}</strong>{' '}
-                      {ing.name}
+                      {ing.amount == null ? (
+                        <>
+                          {ing.name} <span className="qty-note">({ing.unit})</span>
+                        </>
+                      ) : (
+                        <>
+                          <strong>{formatQuantity(ing.amount * scale, ing.unit)}</strong> {ing.name}
+                        </>
+                      )}
                     </span>
                   </label>
                 </li>

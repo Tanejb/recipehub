@@ -202,8 +202,9 @@ export async function getShoppingItems(): Promise<ShoppingItem[]> {
 }
 
 /**
- * Doda sestavine na seznam. Če je ista sestavina z isto enoto že na seznamu (in še ni
- * odkljukana), se količini seštejeta, namesto da bi nastala podvojena vrstica.
+ * Doda sestavine recepta na seznam. Če je ista sestavina istega recepta z isto enoto že na
+ * seznamu (in še ni odkljukana), se količini seštejeta, namesto da bi nastala podvojena vrstica.
+ * Sestavine različnih receptov ostanejo ločene, ker je seznam razdeljen po receptih.
  * Vrne število novih in posodobljenih vrstic.
  */
 export async function addIngredientsToShoppingList(
@@ -213,7 +214,9 @@ export async function addIngredientsToShoppingList(
   const userId = await ensureVisitor()
   const existing = await getShoppingItems()
   const key = (name: string, unit: string) => `${name.trim().toLowerCase()}|${unitLemma(unit)}`
-  const open = new Map(existing.filter((i) => !i.checked).map((i) => [key(i.name, i.unit), i]))
+  const open = new Map(
+    existing.filter((i) => !i.checked && i.recipe_id === recipeId).map((i) => [key(i.name, i.unit), i]),
+  )
 
   const inserts: Omit<ShoppingItem, 'id' | 'checked' | 'created_at'>[] = []
   const updates: { id: number; amount: number }[] = []
@@ -284,4 +287,58 @@ export async function getFavoriteRecipes(): Promise<RecipeSummary[]> {
   if (e2) throw e2
   const byId = new Map((data as RecipeSummary[]).map((r) => [r.id, r]))
   return ids.map((id) => byId.get(id)).filter((r): r is RecipeSummary => Boolean(r))
+}
+
+export type ShoppingList = { items: ShoppingItem[]; recipes: Record<number, { slug: string; title: string }> }
+
+/** Postavke skupaj z imeni receptov, iz katerih izhajajo (za združevanje po receptu). */
+export async function getShoppingList(): Promise<ShoppingList> {
+  const items = await getShoppingItems()
+  const ids = [...new Set(items.map((i) => i.recipe_id).filter((id): id is number => id != null))]
+  const recipes: ShoppingList['recipes'] = {}
+  if (ids.length) {
+    const { data, error } = await supabase.from('recipes').select('id, slug, title').in('id', ids)
+    if (error) throw error
+    for (const r of data) recipes[r.id as number] = { slug: r.slug as string, title: r.title as string }
+  }
+  return { items, recipes }
+}
+
+export async function addManualShoppingItem(item: { name: string; amount: number | null; unit: string }): Promise<ShoppingItem> {
+  const userId = await ensureVisitor()
+  const { data, error } = await supabase
+    .from('shopping_items')
+    .insert({ user_id: userId, recipe_id: null, name: item.name, amount: item.amount, unit: unitLemma(item.unit) })
+    .select('id, recipe_id, name, amount, unit, checked, created_at')
+    .single()
+  if (error) throw error
+  return data as ShoppingItem
+}
+
+export async function updateShoppingItem(id: number, patch: Partial<Pick<ShoppingItem, 'checked' | 'amount'>>): Promise<void> {
+  const { error } = await supabase.from('shopping_items').update(patch).eq('id', id)
+  if (error) throw error
+}
+
+export async function deleteShoppingItems(ids: number[]): Promise<void> {
+  if (!ids.length) return
+  const { error } = await supabase.from('shopping_items').delete().in('id', ids)
+  if (error) throw error
+}
+
+/** Ponovno vstavi izbrisane postavke (za »Razveljavi«). */
+export async function restoreShoppingItems(items: ShoppingItem[]): Promise<void> {
+  const userId = await ensureVisitor()
+  const { error } = await supabase.from('shopping_items').insert(
+    items.map(({ recipe_id, name, amount, unit, checked, created_at }) => ({
+      user_id: userId,
+      recipe_id,
+      name,
+      amount,
+      unit,
+      checked,
+      created_at,
+    })),
+  )
+  if (error) throw error
 }

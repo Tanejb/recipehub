@@ -1611,3 +1611,291 @@ textarea {
 .toast-action:hover {
   background: rgba(243, 198, 173, 0.15);
 }
+
+/* --- Nakupovalni seznam -------------------------------------------------------- */
+
+.shopping-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.shopping-progress {
+  font-family: var(--serif);
+  font-size: 1.3rem;
+}
+
+.shopping-progress strong {
+  color: var(--accent-strong);
+  font-size: 2rem;
+}
+
+.shopping-layout {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: clamp(2rem, 5vw, 4rem);
+  align-items: start;
+}
+
+.shopping-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.toolbar-spacer {
+  flex: 1;
+}
+
+.link-button.danger {
+  color: #8a1f11;
+}
+
+.shopping-group {
+  margin-bottom: 2.25rem;
+}
+
+.group-head {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem 1rem;
+  flex-wrap: wrap;
+  border-bottom: 2px solid var(--ink);
+  padding-bottom: 0.5rem;
+}
+
+.group-head h2 {
+  font-size: 1.5rem;
+  flex: 1;
+}
+
+.group-head h2 a {
+  text-decoration: none;
+}
+
+.group-head h2 a:hover {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.group-progress {
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+}
+
+.shopping-items {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.shopping-items li {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  border-bottom: 1px dashed var(--rule);
+  min-height: 3.1rem;
+}
+
+.shopping-check {
+  flex: 1;
+  padding: 0.6rem 0;
+}
+
+.shopping-items li.is-checked .shopping-check span {
+  text-decoration: line-through;
+  color: var(--ink-soft);
+}
+
+.row-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.icon-button {
+  width: 2.25rem;
+  height: 2.25rem;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  font-size: 1.4rem;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--ink-soft);
+}
+
+.icon-button:hover {
+  background: var(--paper-deep);
+  color: var(--ink);
+}
+
+.amount-edit {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.amount-edit input {
+  width: 5rem;
+  border: 1.5px solid var(--ink);
+  border-radius: var(--radius);
+  padding: 0.35rem 0.5rem;
+  background: var(--card);
+}
+
+.amount-unit {
+  font-size: 0.9rem;
+  color: var(--ink-soft);
+}
+
+.manual-add {
+  position: sticky;
+  top: 1rem;
+  display: grid;
+  gap: 0.9rem;
+  background: var(--card);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+}
+
+.manual-add h2 {
+  font-size: 1.5rem;
+}
+
+.manual-hint {
+  font-size: 0.9rem;
+  color: var(--ink-soft);
+  margin-top: -0.5rem;
+}
+
+.field {
+  display: grid;
+  gap: 0.3rem;
+}
+
+.field label {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.field input,
+.field select,
+.field textarea {
+  width: 100%;
+  border: 1.5px solid var(--ink);
+  border-radius: var(--radius);
+  padding: 0.65rem 0.75rem;
+  background: #fff;
+}
+
+.field input[aria-invalid='true'],
+.field select[aria-invalid='true'],
+.field textarea[aria-invalid='true'] {
+  border-color: #8a1f11;
+  box-shadow: 0 0 0 1px #8a1f11;
+}
+
+.field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.optional {
+  font-weight: 400;
+  color: var(--ink-soft);
+}
+
+.field-error {
+  color: #8a1f11;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.btn-danger {
+  background: #8a1f11;
+  border-color: #8a1f11;
+}
+
+.btn-danger:hover {
+  background: #6e180d;
+  border-color: #6e180d;
+}
+
+.confirm-dialog {
+  border: 2px solid var(--ink);
+  border-radius: var(--radius);
+  padding: 1.75rem;
+  max-width: 440px;
+  background: var(--paper);
+  color: var(--ink);
+}
+
+.confirm-dialog::backdrop {
+  background: rgba(43, 33, 24, 0.5);
+}
+
+.confirm-dialog h2 {
+  font-size: 1.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+@media (max-width: 900px) {
+  .shopping-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .shopping-side {
+    order: -1;
+  }
+
+  .manual-add {
+    position: static;
+  }
+}
+
+/* --- Tiskanje: samo seznam ----------------------------------------------------- */
+
+@media print {
+  .edition-bar,
+  .site-header,
+  .site-footer,
+  .skip-link,
+  .toast-region,
+  .no-print {
+    display: none !important;
+  }
+
+  body {
+    background: #fff;
+  }
+
+  .shopping-layout {
+    display: block;
+  }
+
+  .shopping-items li {
+    break-inside: avoid;
+  }
+}
+
+.qty-note {
+  color: var(--ink-soft);
+}
+
+.field-row {
+  align-items: end;
+}
